@@ -28,5 +28,6 @@
 		</config-file>
 
 		<source-file src="src/android/com/customautosys/saf_mediastore/SafMediastore.java" target-dir="src/com/customautosys/saf_mediastore/"/>
+		<framework src="androidx.documentfile:documentfile:1.0.1" />
 	</platform>
 </plugin>
