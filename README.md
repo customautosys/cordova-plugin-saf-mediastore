@@ -2,7 +2,7 @@
 
 ## Read and save files using the Storage Access Framework and Mediastore
 
-This plugin allows you to read and save files using the Storage Access Framework and Mediastore on Android only.
+This plugin allows you to read and save files using the Storage Access Framework and Mediastore on Android only. Added copy from file method and some fixes.
 
 ## Available methods
 
