@@ -224,7 +224,8 @@ public class SafMediastore extends CordovaPlugin implements ValueCallback<String
 			callbackContext.success(uri.toString());
 			return true;
 		}catch(Exception e){
-			callbackContext.error(debugLog(e));
+			debugLog(e);
+			callbackContext.error(e.toString());
 			return false;
 		}
 	}
@@ -292,7 +293,8 @@ public class SafMediastore extends CordovaPlugin implements ValueCallback<String
 			callbackContext.success(uri.toString());
 			return true;
 		}catch(Exception e){
-			callbackContext.error(debugLog(e));
+			debugLog(e);
+			callbackContext.error(e.toString());
 			return false;
 		}
 	}
