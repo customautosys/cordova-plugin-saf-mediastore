@@ -42,6 +42,16 @@ writeFile(params:{
 Writes a file to a specific filename, with the folder and subfolder being optional. The subfolder will be created if it does not exist, and the default folder is the Downloads folder (saved via Mediastore). Returns the content URI. ```data``` is a Base 64 string.
 
 ```typescript
+copyFile(params:{
+	srcfile:string,
+	filename:string,
+	folder?:string,
+	subFolder?:string
+}):Promise<string>
+```
+Copies srcfile's contents to a specific filename, with the folder and subfolder being optional. The subfolder will be created if it does not exist, and the default folder is the Downloads folder (saved via Mediastore). Returns the content URI. ```srcfile``` is cordova source file name. It may be more memory friendly than handling hundreds of MB of base64.
+
+```typescript
 overwriteFile(params:{
     uri:string,
     data:string

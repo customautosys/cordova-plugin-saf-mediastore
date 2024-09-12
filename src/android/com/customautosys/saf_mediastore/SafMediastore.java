@@ -153,6 +153,82 @@ public class SafMediastore extends CordovaPlugin implements ValueCallback<String
 		}
 	}
 
+	public boolean copyFile(JSONArray args,CallbackContext callbackContext){
+		try{
+			JSONObject params=args.getJSONObject(0);
+			String filename=params.getString("filename");
+			String mimeType=MimeTypeMap.getSingleton().getMimeTypeFromExtension(filename.substring(filename.lastIndexOf('.')+1));
+			if(mimeType==null)mimeType="*/*";
+			String folder=null;
+			try{
+				if(!params.isNull("folder"))folder=params.getString("folder");
+			}catch(Exception e){
+				debugLog(e);
+			}
+			String subFolder="";
+			try{
+				if(!params.isNull("subFolder"))subFolder=params.getString("subFolder");
+			}catch(Exception e){
+				debugLog(e);
+			}
+			Uri uri=null;
+			if(folder!=null&&!folder.trim().equals("")){
+				DocumentFile documentFile=DocumentFile.fromTreeUri(
+					cordovaInterface.getContext(),
+					Uri.parse(folder)
+				);
+				if(subFolder!=null){
+					String subFolders[]=subFolder.split("/");
+					for(int i=0;i<subFolders.length;++i){
+						DocumentFile subFolderDocumentFile=null;
+						for(DocumentFile subFile:documentFile.listFiles()){
+							if(subFile.isDirectory()&&subFile.getName().equals(subFolder)){
+								subFolderDocumentFile=subFile;
+								break;
+							}
+						}
+						documentFile=subFolderDocumentFile!=null?subFolderDocumentFile:documentFile.createDirectory(subFolders[i]);
+					}
+				}
+				DocumentFile file=null;
+				for(DocumentFile subFile:documentFile.listFiles()){
+					if(!subFile.isDirectory()&&subFile.getName().equals(filename)){
+						file=subFile;
+						break;
+					}
+				}
+				uri=(file!=null?file:documentFile.createFile(
+					mimeType,
+					filename
+				)).getUri();
+			}else{
+				ContentResolver contentResolver=cordovaInterface.getContext().getContentResolver();
+				ContentValues contentValues=new ContentValues();
+				contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME,filename);
+				contentValues.put(MediaStore.MediaColumns.MIME_TYPE,mimeType);
+				if(!subFolder.startsWith("/"))subFolder="/"+subFolder;
+				contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH,Environment.DIRECTORY_DOWNLOADS+subFolder);
+				uri=contentResolver.insert(MediaStore.Files.getContentUri("external"),contentValues);
+			}
+			int off = 0;
+			int len = 0;
+			int rr = -1;
+			byte[] buff = new byte[1000000];
+			try(
+				InputStream inputStream=cordovaInterface.getContext().getContentResolver().openInputStream(Uri.parse(params.getString("srcfile")));
+				OutputStream outputStream=cordovaInterface.getContext().getContentResolver().openOutputStream(uri,"wt")){
+				while ((rr = inputStream.read(buff, off, 1000000)) > 0) {
+					outputStream.write(buff, off, rr);
+				}
+			}
+			callbackContext.success(uri.toString());
+			return true;
+		}catch(Exception e){
+			callbackContext.error(debugLog(e));
+			return false;
+		}
+	}
+
 	public boolean writeFile(JSONArray args,CallbackContext callbackContext){
 		try{
 			JSONObject params=args.getJSONObject(0);

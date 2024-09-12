@@ -4,6 +4,12 @@ interface SafMediastore{
 	openFolder(uri:string):Promise<void>,
 	openFile(uri:string):Promise<void>,
 	readFile(uri:string):Promise<ArrayBuffer>,
+	copyFile(params:{
+		data:string,
+		filename:string,
+		folder?:string,
+		subFolder?:string
+	}):Promise<string>,
 	writeFile(params:{
 		data:string,
 		filename:string,
