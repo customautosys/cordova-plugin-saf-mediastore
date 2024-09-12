@@ -177,7 +177,7 @@ public class SafMediastore extends CordovaPlugin implements ValueCallback<String
 					cordovaInterface.getContext(),
 					Uri.parse(folder)
 				);
-				if(subFolder!=null){
+				if(subFolder!=""){
 					String subFolders[]=subFolder.split("/");
 					for(int i=0;i<subFolders.length;++i){
 						DocumentFile subFolderDocumentFile=null;
@@ -253,7 +253,7 @@ public class SafMediastore extends CordovaPlugin implements ValueCallback<String
 					cordovaInterface.getContext(),
 					Uri.parse(folder)
 				);
-				if(subFolder!=null){
+				if(subFolder!=""){
 					String subFolders[]=subFolder.split("/");
 					for(int i=0;i<subFolders.length;++i){
 						DocumentFile subFolderDocumentFile=null;
