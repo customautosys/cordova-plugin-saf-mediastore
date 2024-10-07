@@ -32,6 +32,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.FileNotFoundException;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -158,6 +159,10 @@ public class SafMediastore extends CordovaPlugin implements ValueCallback<String
 			JSONObject params=args.getJSONObject(0);
 			String filename=params.getString("filename");
 			String mimeType=MimeTypeMap.getSingleton().getMimeTypeFromExtension(filename.substring(filename.lastIndexOf('.')+1));
+			boolean forceoverwrite = false;
+			try {
+				forceoverwrite = params.getBoolean("overwrite");
+			} catch(Exception ex) { ; }
 			if(mimeType==null)mimeType="*/*";
 			String folder=null;
 			try{
@@ -210,20 +215,79 @@ public class SafMediastore extends CordovaPlugin implements ValueCallback<String
 				contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH,Environment.DIRECTORY_DOWNLOADS+subFolder);
 				uri=contentResolver.insert(MediaStore.Files.getContentUri("external"),contentValues);
 			}
-			int off = 0;
-			int len = 0;
-			int rr = -1;
-			byte[] buff = new byte[1000000];
-			try(
-				InputStream inputStream=cordovaInterface.getContext().getContentResolver().openInputStream(Uri.parse(params.getString("srcfile")));
-				OutputStream outputStream=cordovaInterface.getContext().getContentResolver().openOutputStream(uri,"wt")){
-				while ((rr = inputStream.read(buff, off, 1000000)) > 0) {
-					outputStream.write(buff, off, rr);
+			/*************/
+			InputStream ism = null; 
+			try {
+				boolean nfound = false;
+				ism = cordovaInterface.getContext().getContentResolver().openInputStream(uri);
+				if (ism == null) nfound = true;
+				else { /* got input stream */
+					byte[] b = new byte[2];
+					int r = ism.read(b, 0, 2);
+					if (r < 2) nfound = true;
+					else { /* at least two bytes in file */
+						try {
+							ism.close();
+						}catch(Exception e){debugLog("saf copy exc close read " + e.toString());}
+						callbackContext.error("File exists");
+						//debugLog("E X X X 1");
+						return false;
+					}
+					//debugLog("E X X X 2");
+					try {
+						ism.close();
+					}catch(Exception e){debugLog("saf copy exc close empty " + e.toString());}
+				}
+				if (!nfound && !forceoverwrite) {
+					debugLog("saf copy closed");
+					callbackContext.error("File exists");
+					return false;
+				} else {
+					if (forceoverwrite) {
+						debugLog("saf copy overwrite forced");
+					}
+					int off = 0;
+					int len = 0;
+					int rr = -1;
+					byte[] buff = new byte[1000000];
+					try(
+						InputStream inputStream=cordovaInterface.getContext().getContentResolver().openInputStream(Uri.parse(params.getString("srcfile")));
+						OutputStream outputStream=cordovaInterface.getContext().getContentResolver().openOutputStream(uri,"wt")){
+						while ((rr = inputStream.read(buff, off, 1000000)) > 0) {
+							outputStream.write(buff, off, rr);
+						}
+						//debugLog("E X X X 5");
+						callbackContext.success(uri.toString());
+						return true;
+					}catch(Exception e) {
+						debugLog("saf copy exc copy empty " + e.toString());
+						callbackContext.error(e.toString());
+						return false;
+					}
 				}
 			}
-			callbackContext.success(uri.toString());
-			return true;
+			catch (FileNotFoundException e) {
+				debugLog("saf copy filenotfound " + e.toString());
+				int off = 0;
+				int len = 0;
+				int rr = -1;
+				byte[] buff = new byte[1000000];
+				try(
+					InputStream inputStream=cordovaInterface.getContext().getContentResolver().openInputStream(Uri.parse(params.getString("srcfile")));
+					OutputStream outputStream=cordovaInterface.getContext().getContentResolver().openOutputStream(uri,"wt")){
+					while ((rr = inputStream.read(buff, off, 1000000)) > 0) {
+						outputStream.write(buff, off, rr);
+					}
+					callbackContext.success(uri.toString());
+					return true;
+				}catch(Exception ex2) {
+						debugLog("saf copy exc copy fnf " + ex2.toString());
+						callbackContext.error(ex2.toString());
+						return false;
+				}
+			}
 		}catch(Exception e){
+			debugLog("saf copy exception");
 			debugLog(e);
 			callbackContext.error(e.toString());
 			return false;
@@ -483,7 +547,7 @@ public class SafMediastore extends CordovaPlugin implements ValueCallback<String
 			throwable.printStackTrace(printWriter);
 			String stackTrace=stringWriter.toString();
 			Log.d(throwable.getLocalizedMessage(),stackTrace,throwable);
-			cordovaWebView.getEngine().evaluateJavascript(
+			/*cordovaWebView.getEngine().evaluateJavascript(
 				"console.log('" +stackTrace.replace(
 					"'",
 					"\\'"
@@ -495,7 +559,7 @@ public class SafMediastore extends CordovaPlugin implements ValueCallback<String
 					"\\t"
 				)+"');",
 				this
-			);
+			);*/
 			printWriter.close();
 			stringWriter.close();
 			return stackTrace;
@@ -507,7 +571,7 @@ public class SafMediastore extends CordovaPlugin implements ValueCallback<String
 
 	public String debugLog(String message){
 		Log.d(getClass().getName(),message);
-		cordovaWebView.getEngine().evaluateJavascript(
+		/*cordovaWebView.getEngine().evaluateJavascript(
 			"console.log('" +message.replace(
 				"'",
 				"\\'"
@@ -519,7 +583,7 @@ public class SafMediastore extends CordovaPlugin implements ValueCallback<String
 				"\\t"
 			)+"');",
 			this
-		);
+		);*/
 		return message;
 	}
 
