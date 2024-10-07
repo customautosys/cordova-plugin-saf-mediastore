@@ -163,6 +163,7 @@ public class SafMediastore extends CordovaPlugin implements ValueCallback<String
 			try {
 				forceoverwrite = params.getBoolean("overwrite");
 			} catch(Exception ex) { ; }
+			//debugLog(forceoverwrite ? "saf OVERWRITE  T " : "saf OVERWRITE F ");
 			if(mimeType==null)mimeType="*/*";
 			String folder=null;
 			try{
@@ -224,7 +225,7 @@ public class SafMediastore extends CordovaPlugin implements ValueCallback<String
 				else { /* got input stream */
 					byte[] b = new byte[2];
 					int r = ism.read(b, 0, 2);
-					if (r < 2) nfound = true;
+					if (r < 2 || forceoverwrite) nfound = true;
 					else { /* at least two bytes in file */
 						try {
 							ism.close();
