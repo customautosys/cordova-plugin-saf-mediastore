@@ -25,6 +25,7 @@ module.exports=(function(){
 		'openFile',
 		'readFile',
 		'writeFile',
+		'copyFile',
 		'overwriteFile',
 		'saveFile',
 		'deleteFile',
